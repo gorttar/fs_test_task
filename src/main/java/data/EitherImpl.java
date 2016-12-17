@@ -18,14 +18,6 @@ final class Left<L, R> implements Either<L, R> {
         this.l = l;
     }
 
-    @SuppressWarnings("unchecked")
-    @Nonnull
-    @Override
-    public <L2, R2> Either<L2, R2> flatMap(@Nonnull Function<? super L, ? extends Either<L2, R>> lMapper,
-                                           @Nonnull Function<? super R, ? extends Either<L, R2>> rMapper) {
-        return (Either<L2, R2>) lMapper.apply(l);
-    }
-
     @Override
     public R getRight() throws UnwrapException {
         throw new UnwrapException("Left instances doesn't contain right value");
@@ -85,13 +77,6 @@ final class Right<L, R> implements Either<L, R> {
 
     Right(R r) {
         this.r = r;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Nonnull
-    @Override
-    public <L2, R2> Either<L2, R2> flatMap(@Nonnull Function<? super L, ? extends Either<L2, R>> lMapper, @Nonnull Function<? super R, ? extends Either<L, R2>> rMapper) {
-        return (Either<L2, R2>) rMapper.apply(r);
     }
 
     @Override
