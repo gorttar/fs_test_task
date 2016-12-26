@@ -1,6 +1,5 @@
 package fs;
 
-import static data.ArrayHelper.asSet;
 import static fs.FileType.DIRECTORY;
 import static fs.FileType.REGULAR;
 import static fs.ResultCheckers.ALREADY_EXISTS_CHECKER;
@@ -12,7 +11,6 @@ import static fs.ResultCheckers.PATH_NOT_FOUND_CHECKER;
 import static fs.ResultCheckers.provideInfoChecker;
 import static fs.TestFileNames.EXISTING_DIR;
 import static fs.TestFileNames.EXISTING_FILE;
-import static fs.TestFileNames.INNER_DIR;
 import static fs.TestFileNames.INNER_DIR_IN_TEST_DIR;
 import static fs.TestFileNames.INNER_FILE;
 import static fs.TestFileNames.INNER_FILE_IN_TEST_DIR;
@@ -31,6 +29,7 @@ import static fs.TestFileNames.TEST_FILE_IN_NOPE;
 import static helpers.TestHelper.addReprToCons;
 import static helpers.TestHelper.nop;
 import static helpers.TestHelper.provideFail;
+import static java.util.Arrays.asList;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -38,12 +37,12 @@ import static org.testng.Assert.fail;
 import data.ByteArray;
 import data.Unit;
 import helpers.TestHelper;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -202,15 +201,15 @@ public class FSTest {
                                         provideFail("Should list directory content"),
                                         addReprToCons(
                                                 actual -> assertEquals(
-                                                        asSet(actual),
-                                                        asSet(
+                                                        actual,
+                                                        asList(
                                                                 new FileInfo(INNER_FILE_IN_TEST_DIR, REGULAR, 0),
                                                                 new FileInfo(INNER_DIR_IN_TEST_DIR, DIRECTORY, 0))),
                                                 "actual -> assertEquals(" +
-                                                        "asSet(actual)," +
-                                                        "asSet(" +
-                                                        "new FileInfo(\"" + TEST_DIR + INNER_FILE + "\", REGULAR, 0)," +
-                                                        "new FileInfo(\"" + TEST_DIR + INNER_DIR + "\", DIRECTORY, 0)))")},
+                                                        "actual," +
+                                                        "asList(" +
+                                                        "new FileInfo(INNER_FILE_IN_TEST_DIR, REGULAR, 0)," +
+                                                        "new FileInfo(INNER_DIR_IN_TEST_DIR, DIRECTORY, 0)))")},
                                 // non existing directory
                                 {
                                         NOPE,
@@ -235,7 +234,7 @@ public class FSTest {
     }
 
     @Test(dataProvider = "testLs")
-    public void testLs(String path, Consumer<FSError> leftChecker, Consumer<FileInfo[]> rightChecker) throws Exception {
+    public void testLs(String path, Consumer<FSError> leftChecker, Consumer<List<FileInfo>> rightChecker) throws Exception {
         testFs.ls(path).onBoth(leftChecker, rightChecker);
     }
 
@@ -540,11 +539,11 @@ public class FSTest {
 
         private Consumer<Unit> provideDirChecker(String path, FileInfo expectedInfo, FileInfo... expectedContent) {
             return addReprToCons(
-                    __ -> checkDir(path, expectedInfo, expectedContent),
+                    __ -> checkDir(path, expectedInfo, asList(expectedContent)),
                     "__-> checkDir(" + path + ", " + expectedInfo + ", " + Arrays.toString(expectedContent) + ")");
         }
 
-        private void checkDir(String path, FileInfo expectedInfo, FileInfo[] expectedContent) {
+        private void checkDir(String path, FileInfo expectedInfo, List<FileInfo> expectedContent) {
             assertEquals(
                     testFs.info(path).elseGetRight(
                             () -> {

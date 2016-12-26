@@ -3,11 +3,14 @@
  */
 package fs;
 
+import static fs.FSError.Type.FS_CREATION_FAILED;
+
 import data.ByteArray;
 import data.Either;
 import data.Unit;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 
 /**
  * ADT representing file system API
@@ -58,7 +61,7 @@ public interface FS {
      * {@link FSError.Type#FILE_IS_REGULAR} if you are trying to get list of files in regular file
      */
     @Nonnull
-    Either<FSError, FileInfo[]> ls(@Nonnull String path);
+    Either<FSError, List<FileInfo>> ls(@Nonnull String path);
 
     /**
      * copies file or directory with it's subtree to another location
@@ -178,6 +181,6 @@ public interface FS {
      */
     @Nonnull
     static Either<FSError, FS> init(long size) {
-        throw new UnsupportedOperationException("Not implemented yet!");
+        return size >= 0 ? Either.right(FSConfig.init(size)) : Either.left(new FSError(FS_CREATION_FAILED, "Can't create file system with negative size"));
     }
 }
