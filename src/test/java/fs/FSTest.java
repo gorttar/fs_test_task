@@ -58,8 +58,8 @@ public class FSTest {
 
     private void setUp() {
         testFs = FS.init(FS_SIZE).both(
-                __ -> {
-                    throw new AssertionError("File system initialisation failed");
+                e -> {
+                    throw new AssertionError("File system initialisation failed", e);
                 },
                 x -> x);
     }
