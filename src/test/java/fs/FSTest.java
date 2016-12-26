@@ -38,6 +38,7 @@ import static org.testng.Assert.fail;
 import data.ByteArray;
 import data.Unit;
 import helpers.TestHelper;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -426,6 +427,17 @@ public class FSTest {
         final int fileMinimalSize = FS_SIZE / 2;
         testFs.write(testFile, new byte[fileMinimalSize]);
         assertTrue(testFs.used() >= fileMinimalSize);
+    }
+
+    @Test
+    public void testFree() throws Exception {
+        setUp();
+        final String testFile = TEST_FILE;
+        testFs.create(testFile, REGULAR);
+        final int fileMinimalSize = FS_SIZE / 2;
+        testFs.write(testFile, new byte[fileMinimalSize]);
+        assertEquals(testFs.used() + testFs.free(), testFs.size());
+        assertTrue(testFs.free() <= fileMinimalSize);
     }
 
     @DataProvider(name = "testMove")
