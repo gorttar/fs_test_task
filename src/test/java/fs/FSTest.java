@@ -70,8 +70,8 @@ public class FSTest {
                 .of(
                         new Object[][]{
                                 // success
-                                {EXISTING_DIR + TEST_FILE, REGULAR, provideFail("Should create file"), nop()},
-                                {EXISTING_DIR + TEST_DIR, DIRECTORY, provideFail("Should create directory"), nop()},
+                                {TestFileNames.TEST_FILE_IN_EXISTING_DIR, REGULAR, provideFail("Should create file"), nop()},
+                                {TestFileNames.TEST_DIR_IN_EXISTING_DIR, DIRECTORY, provideFail("Should create directory"), nop()},
                                 // file already exists
                                 {
                                         EXISTING_FILE,

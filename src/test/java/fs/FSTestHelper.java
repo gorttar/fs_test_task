@@ -62,6 +62,8 @@ final class TestFileNames {
     static final String NOPE = "/nope";
     static final String MOVED_NOPE = "/moved_nope";
 
+    static final String TEST_DIR_IN_EXISTING_DIR = EXISTING_DIR + TEST_DIR;
+    static final String TEST_FILE_IN_EXISTING_DIR = EXISTING_DIR + TEST_FILE;
     static final String INNER_FILE_IN_TEST_DIR2 = TEST_DIR2 + INNER_FILE;
     static final String INNER_FILE_IN_TEST_DIR = TEST_DIR + INNER_FILE;
     static final String INNER_DIR_IN_TEST_DIR = TEST_DIR + INNER_DIR;
