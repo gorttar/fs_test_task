@@ -46,7 +46,7 @@ public interface FS {
      * @return either byte array filled with file content or an instance of {@link FSError}
      * <p>
      * possible error types:
-     * {@link FSError.Type#FILE_NOT_FOUND} if there is no file at path
+     * {@link FSError.Type#PATH_NOT_FOUND} if there is no file at path
      * {@link FSError.Type#FILE_IS_DIRECTORY} if you are trying to read from directory
      */
     @Nonnull
@@ -86,7 +86,7 @@ public interface FS {
      * @return either {@link Unit#unit()} or an instance of {@link FSError}
      * <p>
      * possible error types:
-     * {@link FSError.Type#FILE_NOT_FOUND} if there is no file at path
+     * {@link FSError.Type#PATH_NOT_FOUND} if there is no file at path
      * {@link FSError.Type#FILE_IS_DIRECTORY} if you are trying to write directory
      * {@link FSError.Type#NO_FREE_SPACE} if there is no free space in file system
      */
@@ -101,7 +101,7 @@ public interface FS {
      * @return either {@link Unit#unit()} or an instance of {@link FSError}
      * <p>
      * possible error types:
-     * {@link FSError.Type#FILE_NOT_FOUND} if there is no file at path
+     * {@link FSError.Type#PATH_NOT_FOUND} if there is no file at path
      * {@link FSError.Type#FILE_IS_DIRECTORY} if you are trying to write directory
      * {@link FSError.Type#NO_FREE_SPACE} if there is no free space in file system
      */

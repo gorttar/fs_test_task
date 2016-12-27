@@ -46,6 +46,10 @@ public class ByteArray {
         return Arrays.equals(content, byteArray.content);
     }
 
+    public int length() {
+        return content.length;
+    }
+
     @Override
     public int hashCode() {
         return Arrays.hashCode(content);
@@ -55,4 +59,6 @@ public class ByteArray {
     public String toString() {
         return "ByteArray(" + Arrays.toString(content) + ')';
     }
+
+
 }

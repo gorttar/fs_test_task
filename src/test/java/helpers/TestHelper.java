@@ -65,6 +65,6 @@ public final class TestHelper {
      * @return consumer described above
      */
     public static <T> Consumer<T> provideFail(String message) {
-        return addReprToCons(__ -> fail(message), "__ -> fail(\"" + message + "\")");
+        return addReprToCons(arg -> fail(message + "\targ:" + arg), "arg -> fail(" + message + " + \"\\targ:\" + arg)");
     }
 }

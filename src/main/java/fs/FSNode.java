@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2016 Maxifier Ltd. All Rights Reserved.
+ * Copyright (c) 2016 Andrey Antipov. All Rights Reserved.
  */
 package fs;
 
@@ -8,13 +8,14 @@ import data.Either;
 import data.Unit;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 /**
  * interface of file system node
  *
- * @author Andrey Antipov (andrey.antipov@cxense.com) (2016-12-26 20:59)
+ * @author Andrey Antipov (gorttar@gmail.com) (2016-12-26)
  */
 interface FSNode extends Cloneable {
     @Nonnull
@@ -33,14 +34,24 @@ interface FSNode extends Cloneable {
     Either<FSError, Unit> removeChild(@Nonnull FSNode child);
 
     @Nonnull
-    Either<FSError, Unit> write(@Nonnull String name, @Nonnull byte[] content);
+    Either<FSError, Unit> write(@Nonnull byte[] content);
 
     @Nonnull
-    Either<FSError, Unit> append(@Nonnull String name, @Nonnull byte[] content);
+    Either<FSError, Unit> append(@Nonnull byte[] content);
 
     void rename(@Nonnull String name);
 
-    FSNode copyUnder(@Nonnull String newName, @Nonnull FSNode parent);
+    @Nonnull
+    Either<FSError, FSNode> findUnder(@Nonnull List<String> splitPath);
+
+    @Nonnull
+    Either<FSError, Unit> createUnder(@Nonnull String name, @Nonnull FileType fileType);
+
+    @Nonnull
+    Either<FSError, Unit> deleteUnder(@Nonnull String name);
+
+    @Nonnull
+    FSNode copyTo(@Nonnull String newName, @Nonnull FSNode newParent);
 
     @Nonnull
     String name();
@@ -60,13 +71,13 @@ interface FSNode extends Cloneable {
     }
 
     default String path() {
-        return path("");
+        return path(name());
     }
 
     default String path(String acc) {
         return parent()
-                .map(parentNode -> parentNode.path(name() + acc))
-                .orElse(acc);
+                .map(parentNode -> parentNode.path(parentNode.name() + '/' + acc))
+                .orElse('/' + acc);
     }
 
     @Nonnull
@@ -83,5 +94,10 @@ interface FSNode extends Cloneable {
                 throw new UnsupportedOperationException(fileType + " is not supported");
         }
         return result;
+    }
+
+    @Nonnull
+    static FSNode createRoot() {
+        return FSNodeConfig.createRoot();
     }
 }

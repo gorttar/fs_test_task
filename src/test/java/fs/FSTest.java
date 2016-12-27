@@ -171,7 +171,7 @@ public class FSTest {
                                         TestHelper.<ByteArray>addReprToCons(
                                                 actual -> assertEquals(actual, new ByteArray(new byte[]{1, 2})),
                                                 "actual -> assertEquals(actual, new ByteArray(new byte[]{1, 2}))")},
-                                {NOPE, FILE_NOT_FOUND_CHECKER, provideFail("Shouldn't read from non existent file")},
+                                {NOPE, PATH_NOT_FOUND_CHECKER, provideFail("Shouldn't read from non existent file")},
                                 {TEST_DIR, FILE_IS_DIRECTORY_CHECKER, provideFail("Shouldn't read from directory")},
                         })
                 .peek(
@@ -307,17 +307,27 @@ public class FSTest {
         return Stream
                 .of(
                         new Object[][]{
+                                // write small content
                                 {
                                         TEST_FILE, new ByteArray(new byte[]{3, 4, 5}),
                                         provideFail("Should write to existing file"),
                                         TestHelper.<Unit>addReprToCons(
-                                                __1 -> testFs.read(TEST_FILE).onRight(actual -> assertEquals(actual.get(),
+                                                __ -> testFs.read(TEST_FILE).onRight(actual -> assertEquals(actual.get(),
                                                         new byte[]{3, 4, 5})),
                                                 "__ -> testFs.read(\"/test_file\").onRight(actual -> assertEquals(actual.get()," +
                                                         "new byte[]{3, 4, 5}))")},
+                                // write large content
+                                {
+                                        TEST_FILE, new ByteArray(new byte[(FS_SIZE * 3) / 4]),
+                                        provideFail("Should write to existing file"),
+                                        TestHelper.<Unit>addReprToCons(
+                                                __ -> testFs.read(TEST_FILE).onRight(actual -> assertEquals(actual.get(),
+                                                        new byte[(FS_SIZE * 3) / 4])),
+                                                "__ -> testFs.read(\"/test_file\").onRight(actual -> assertEquals(actual.get()," +
+                                                        "new byte[(FS_SIZE * 3) / 4]))")},
                                 {
                                         NOPE, new ByteArray(new byte[]{1, 2, 3}),
-                                        FILE_NOT_FOUND_CHECKER,
+                                        PATH_NOT_FOUND_CHECKER,
                                         provideFail("Shouldn't write to non existent file")},
                                 {
                                         TEST_DIR, new ByteArray(new byte[]{1, 2, 3}),
@@ -334,7 +344,7 @@ public class FSTest {
                             setUp();
                             testFs.create(TEST_FILE, REGULAR);
                             testFs.create(TEST_DIR, DIRECTORY);
-                            testFs.write(TEST_FILE, new byte[]{1, 2});
+                            testFs.write(TEST_FILE, new byte[(FS_SIZE * 3) / 4]);
                         })
                 .iterator();
     }
@@ -360,7 +370,7 @@ public class FSTest {
                                                         "new byte[]{1, 2, 3}))")},
                                 {
                                         NOPE, new ByteArray(new byte[]{1, 2, 3}),
-                                        FILE_NOT_FOUND_CHECKER,
+                                        PATH_NOT_FOUND_CHECKER,
                                         provideFail("Shouldn't append to non existent file")},
                                 {
                                         TEST_DIR, new ByteArray(new byte[]{1, 2, 3}),
@@ -400,6 +410,7 @@ public class FSTest {
                 .peek(
                         // setup for run
                         __ -> {
+                            setUp();
                             testFs.create(TEST_FILE, REGULAR);
                             testFs.create(TEST_DIR, DIRECTORY);
                             testFs.create(INNER_FILE_IN_TEST_DIR, REGULAR);
@@ -425,7 +436,9 @@ public class FSTest {
         testFs.create(testFile, REGULAR);
         final int fileMinimalSize = FS_SIZE / 2;
         testFs.write(testFile, new byte[fileMinimalSize]);
-        assertTrue(testFs.used() >= fileMinimalSize);
+        final long used = testFs.used();
+        assertTrue(used >= fileMinimalSize);
+        assertTrue(used <= FS_SIZE);
     }
 
     @Test
