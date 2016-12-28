@@ -18,8 +18,10 @@ public class FSError extends Exception {
     /**
      * error message
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public final String message;
 
+    @SuppressWarnings("WeakerAccess")
     public FSError(Type type, String message) {
         super(message);
         this.type = type;
@@ -27,6 +29,6 @@ public class FSError extends Exception {
     }
 
     public enum Type {
-        NO_FREE_SPACE, FILE_ALREADY_EXISTS, FILE_NOT_FOUND, PATH_NOT_FOUND, FILE_IS_DIRECTORY, FILE_IS_REGULAR, MALFORMED_PATH, FS_CREATION_FAILED
+        NO_FREE_SPACE, FILE_ALREADY_EXISTS, PATH_NOT_FOUND, FILE_IS_DIRECTORY, FILE_IS_REGULAR, DESTINATION_IS_SOURCE_SUBTREE, FS_CREATION_FAILED
     }
 }

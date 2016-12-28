@@ -4,6 +4,7 @@
 package fs;
 
 import static fs.FSError.Type.FS_CREATION_FAILED;
+import static java.util.Objects.requireNonNull;
 
 import data.ByteArray;
 import data.Either;
@@ -18,6 +19,7 @@ import java.util.List;
  *
  * @author Andrey Antipov (gorttar@gmail.com) (2016-12-20)
  */
+@SuppressWarnings("WeakerAccess")
 public interface FS {
     /**
      * @param path     full path to file
@@ -27,6 +29,7 @@ public interface FS {
      * possible error types:
      * {@link FSError.Type#FILE_ALREADY_EXISTS} if there is a file at path
      * {@link FSError.Type#PATH_NOT_FOUND} if there is no directory tree to the given path
+     * {@link FSError.Type#FILE_IS_REGULAR} if you are trying to create file under regular file
      */
     @Nonnull
     Either<FSError, Unit> create(@Nonnull String path, @Nonnull FileType fileType);
@@ -36,7 +39,7 @@ public interface FS {
      * @return either an instance of {@link FileInfo} or an instance of {@link FSError}
      * <p>
      * possible error types:
-     * {@link FSError.Type#FILE_NOT_FOUND} if there is no file at path
+     * {@link FSError.Type#PATH_NOT_FOUND} if there is no file at path
      */
     @Nonnull
     Either<FSError, FileInfo> info(@Nonnull String path);
@@ -57,7 +60,7 @@ public interface FS {
      * @return either array of {@link FileInfo} or an instance of {@link FSError}
      * <p>
      * possible error types:
-     * {@link FSError.Type#FILE_NOT_FOUND} if there is no file at path
+     * {@link FSError.Type#PATH_NOT_FOUND} if there is no file at path
      * {@link FSError.Type#FILE_IS_REGULAR} if you are trying to get list of files in regular file
      */
     @Nonnull
@@ -71,9 +74,10 @@ public interface FS {
      * @return either {@link Unit#unit()} or an instance of {@link FSError}
      * <p>
      * possible error types:
-     * {@link FSError.Type#FILE_NOT_FOUND} if there is no file at source path
+     * {@link FSError.Type#PATH_NOT_FOUND} if there is no file at source path
      * {@link FSError.Type#FILE_ALREADY_EXISTS} if there is a file at destination path
      * {@link FSError.Type#NO_FREE_SPACE} if there is no free space in file system
+     * {@link FSError.Type#FILE_IS_REGULAR} if you are trying to copy under regular file
      */
     @Nonnull
     Either<FSError, Unit> copy(@Nonnull String sourcePath, @Nonnull String destinationPath);
@@ -115,7 +119,7 @@ public interface FS {
      * @return either {@link Unit#unit()} or an instance of {@link FSError}
      * <p>
      * possible error types:
-     * {@link FSError.Type#FILE_NOT_FOUND} if there is no file at path
+     * {@link FSError.Type#PATH_NOT_FOUND} if there is no file at path
      */
     @Nonnull
     Either<FSError, Unit> delete(@Nonnull String path);
@@ -138,19 +142,6 @@ public interface FS {
     }
 
     /**
-     * @param fileInfo containing full path to file and file type
-     * @return either {@link Unit#unit()} or an instance of {@link FSError}
-     * <p>
-     * possible error types:
-     * {@link FSError.Type#FILE_ALREADY_EXISTS} if there is a file at path
-     * {@link FSError.Type#PATH_NOT_FOUND} if there is no directory tree to the given path
-     */
-    @Nonnull
-    default Either<FSError, Unit> create(@Nonnull FileInfo fileInfo) {
-        return create(fileInfo.fullName, fileInfo.type);
-    }
-
-    /**
      * copies file or directory with it's subtree to another location
      *
      * @param sourcePath      full path to source file
@@ -158,16 +149,17 @@ public interface FS {
      * @return either {@link Unit#unit()} or an instance of {@link FSError}
      * <p>
      * possible error types:
-     * {@link FSError.Type#FILE_NOT_FOUND} if there is no file at source path
+     * {@link FSError.Type#PATH_NOT_FOUND} if there is no file at source path
      * {@link FSError.Type#FILE_ALREADY_EXISTS} if there is a file at destination path
      * {@link FSError.Type#NO_FREE_SPACE} if there is no free space in file system
+     * {@link FSError.Type#FILE_IS_REGULAR} if you are trying to copy under regular file
      * <p>
      * This is default implementation based on {@link #copy(String, String)} and {@link #delete(String)}
      * it should be overridden in {@link FS} implementations for optimal resource (RAM, CPU etc) consumption
      */
     @Nonnull
     default Either<FSError, Unit> move(@Nonnull String sourcePath, @Nonnull String destinationPath) {
-        return copy(sourcePath, destinationPath).rFlatMap(__ -> delete(sourcePath));
+        return copy(requireNonNull(sourcePath), requireNonNull(destinationPath)).rFlatMap(__ -> delete(sourcePath));
     }
 
     /**

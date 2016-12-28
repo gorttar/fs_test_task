@@ -3,6 +3,8 @@
  */
 package data;
 
+import static java.util.Objects.requireNonNull;
+
 import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.function.Function;
@@ -25,6 +27,7 @@ final class Left<L, R> implements Either<L, R> {
 
     @Override
     public L elseGetLeft(@Nonnull Supplier<? extends L> lSupplier) {
+        requireNonNull(lSupplier);
         return l;
     }
 
@@ -35,12 +38,13 @@ final class Left<L, R> implements Either<L, R> {
 
     @Override
     public R elseGetRight(@Nonnull Supplier<? extends R> rSupplier) {
-        return rSupplier.get();
+        return requireNonNull(rSupplier).get();
     }
 
     @Override
     public <V> V both(@Nonnull Function<? super L, ? extends V> lMapper, @Nonnull Function<? super R, ? extends V> rMapper) {
-        return lMapper.apply(l);
+        requireNonNull(rMapper);
+        return requireNonNull(lMapper).apply(l);
     }
 
     @Override
@@ -55,8 +59,12 @@ final class Left<L, R> implements Either<L, R> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Left)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Left)) {
+            return false;
+        }
         Left<?, ?> other = (Left<?, ?>) o;
         return Objects.equals(l, other.l);
     }
@@ -86,7 +94,7 @@ final class Right<L, R> implements Either<L, R> {
 
     @Override
     public L elseGetLeft(@Nonnull Supplier<? extends L> lSupplier) {
-        return lSupplier.get();
+        return requireNonNull(lSupplier).get();
     }
 
     @Override
@@ -96,12 +104,14 @@ final class Right<L, R> implements Either<L, R> {
 
     @Override
     public R elseGetRight(@Nonnull Supplier<? extends R> rSupplier) {
+        requireNonNull(rSupplier);
         return r;
     }
 
     @Override
     public <V> V both(@Nonnull Function<? super L, ? extends V> lMapper, @Nonnull Function<? super R, ? extends V> rMapper) {
-        return rMapper.apply(r);
+        requireNonNull(lMapper);
+        return requireNonNull(rMapper).apply(r);
     }
 
     @Override
@@ -116,8 +126,12 @@ final class Right<L, R> implements Either<L, R> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Right)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Right)) {
+            return false;
+        }
         Right<?, ?> other = (Right<?, ?>) o;
         return Objects.equals(r, other.r);
     }

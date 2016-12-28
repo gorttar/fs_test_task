@@ -3,10 +3,10 @@
  */
 package fs;
 
+import static fs.FSError.Type.DESTINATION_IS_SOURCE_SUBTREE;
 import static fs.FSError.Type.FILE_ALREADY_EXISTS;
 import static fs.FSError.Type.FILE_IS_DIRECTORY;
 import static fs.FSError.Type.FILE_IS_REGULAR;
-import static fs.FSError.Type.FILE_NOT_FOUND;
 import static fs.FSError.Type.NO_FREE_SPACE;
 import static fs.FSError.Type.PATH_NOT_FOUND;
 import static helpers.TestHelper.addReprToCons;
@@ -21,11 +21,11 @@ import java.util.function.Consumer;
  */
 final class ResultCheckers {
     static final Consumer<FSError> ALREADY_EXISTS_CHECKER = provideErrorTypeChecker(FILE_ALREADY_EXISTS);
-    static final Consumer<FSError> FILE_NOT_FOUND_CHECKER = provideErrorTypeChecker(FILE_NOT_FOUND);
     static final Consumer<FSError> FILE_IS_REGULAR_CHECKER = provideErrorTypeChecker(FILE_IS_REGULAR);
     static final Consumer<FSError> FILE_IS_DIRECTORY_CHECKER = provideErrorTypeChecker(FILE_IS_DIRECTORY);
     static final Consumer<FSError> PATH_NOT_FOUND_CHECKER = provideErrorTypeChecker(PATH_NOT_FOUND);
     static final Consumer<FSError> NO_FREE_SPACE_CHECKER = provideErrorTypeChecker(NO_FREE_SPACE);
+    static final Consumer<FSError> DESTINATION_IS_SOURCE_SUBTREE_CHECKER = provideErrorTypeChecker(DESTINATION_IS_SOURCE_SUBTREE);
 
     private ResultCheckers() {
     }
@@ -53,7 +53,7 @@ final class TestFileNames {
     static final String TEST_DIR = "/test_dir";
     static final String TEST_DIR2 = "/test_dir2";
     static final String INNER_FILE = "/inner_file";
-    static final String INNER_DIR = "/inner_dir";
+    private static final String INNER_DIR = "/inner_dir";
     static final String EXISTING_FILE = "/existing_file";
     static final String EXISTING_DIR = "/existing_dir";
     static final String LARGE = "/large";

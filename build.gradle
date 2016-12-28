@@ -3,10 +3,12 @@ version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 
+//noinspection GroovyMissingReturnStatement
 test {
     useTestNG()
 }
 
+//noinspection GroovyUnusedAssignment
 sourceCompatibility = 1.8
 
 repositories {

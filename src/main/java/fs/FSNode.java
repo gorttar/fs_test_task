@@ -3,13 +3,14 @@
  */
 package fs;
 
+import static java.util.Objects.requireNonNull;
+
 import data.ByteArray;
 import data.Either;
 import data.Unit;
 
 import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -17,29 +18,21 @@ import java.util.Optional;
  *
  * @author Andrey Antipov (gorttar@gmail.com) (2016-12-26)
  */
-interface FSNode extends Cloneable {
+interface FSNode {
     @Nonnull
-    Optional<FSNode> parent();
+    Optional<FSNode> getParent();
 
     @Nonnull
-    Either<FSError, Map<String, FSNode>> children();
+    Either<FSError, List<FileInfo>> ls();
 
     @Nonnull
     Either<FSError, ByteArray> content();
-
-    @Nonnull
-    Either<FSError, Unit> addChild(@Nonnull FSNode child);
-
-    @Nonnull
-    Either<FSError, Unit> removeChild(@Nonnull FSNode child);
 
     @Nonnull
     Either<FSError, Unit> write(@Nonnull byte[] content);
 
     @Nonnull
     Either<FSError, Unit> append(@Nonnull byte[] content);
-
-    void rename(@Nonnull String name);
 
     @Nonnull
     Either<FSError, FSNode> findUnder(@Nonnull List<String> splitPath);
@@ -50,8 +43,9 @@ interface FSNode extends Cloneable {
     @Nonnull
     Either<FSError, Unit> deleteUnder(@Nonnull String name);
 
-    @Nonnull
-    FSNode copyTo(@Nonnull String newName, @Nonnull FSNode newParent);
+    void copyTo(@Nonnull String newName, @Nonnull FSNode newParent);
+
+    void moveTo(@Nonnull String newName, @Nonnull FSNode newParent);
 
     @Nonnull
     String name();
@@ -66,22 +60,21 @@ interface FSNode extends Cloneable {
         return new FileInfo(path(), type(), size());
     }
 
-    default boolean isRoot() {
-        return !parent().isPresent();
-    }
-
     default String path() {
         return path(name());
     }
 
     default String path(String acc) {
-        return parent()
+        return getParent()
                 .map(parentNode -> parentNode.path(parentNode.name() + '/' + acc))
-                .orElse('/' + acc);
+                .orElse(acc);
     }
 
     @Nonnull
     static FSNode createUnder(@Nonnull String name, @Nonnull FileType fileType, @Nonnull FSNode parent) {
+        requireNonNull(name);
+        requireNonNull(fileType);
+        requireNonNull(parent);
         final FSNode result;
         switch (fileType) {
             case DIRECTORY:
@@ -100,4 +93,6 @@ interface FSNode extends Cloneable {
     static FSNode createRoot() {
         return FSNodeConfig.createRoot();
     }
+
+    void link(@Nonnull FSNode child);
 }

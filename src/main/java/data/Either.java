@@ -3,6 +3,8 @@
  */
 package data;
 
+import static java.util.Objects.requireNonNull;
+
 import javax.annotation.Nonnull;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -78,11 +80,10 @@ public interface Either<L, R> {
      * @param <R2>    new right type parameter
      * @return result of applying either left or right mapper to stored value
      */
-    @SuppressWarnings("unchecked")
     @Nonnull
-    default <L2, R2> Either<L2, R2> flatMap(@Nonnull Function<? super L, ? extends Either<L2, R>> lMapper,
-                                            @Nonnull Function<? super R, ? extends Either<L, R2>> rMapper) {
-        return (Either<L2, R2>) both(lMapper, rMapper);
+    default <L2, R2> Either<L2, R2> flatMap(@Nonnull Function<? super L, ? extends Either<L2, R2>> lMapper,
+                                            @Nonnull Function<? super R, ? extends Either<L2, R2>> rMapper) {
+        return both(requireNonNull(lMapper), requireNonNull(rMapper));
     }
 
     /**
@@ -93,6 +94,8 @@ public interface Either<L, R> {
      */
     default void onBoth(@Nonnull Consumer<? super L> lConsumer,
                         @Nonnull Consumer<? super R> rConsumer) {
+        requireNonNull(lConsumer);
+        requireNonNull(rConsumer);
         map(
                 l -> {
                     lConsumer.accept(l);
@@ -114,7 +117,7 @@ public interface Either<L, R> {
      */
     @Nonnull
     default <L2> Either<L2, R> lMap(@Nonnull Function<? super L, ? extends L2> lMapper) {
-        return map(lMapper, x -> x);
+        return map(requireNonNull(lMapper), x -> x);
     }
 
     /**
@@ -127,7 +130,9 @@ public interface Either<L, R> {
      */
     @Nonnull
     default <L2> Either<L2, R> lFlatMap(@Nonnull Function<? super L, ? extends Either<L2, R>> lMapper) {
-        return flatMap(lMapper, __ -> this);
+        // todo fix contract
+        //noinspection unchecked
+        return flatMap(requireNonNull(lMapper), __ -> (Either<L2, R>) this);
     }
 
     /**
@@ -140,7 +145,7 @@ public interface Either<L, R> {
      */
     @Nonnull
     default <R2> Either<L, R2> rMap(@Nonnull Function<? super R, ? extends R2> rMapper) {
-        return map(x -> x, rMapper);
+        return map(x -> x, requireNonNull(rMapper));
     }
 
     /**
@@ -153,7 +158,9 @@ public interface Either<L, R> {
      */
     @Nonnull
     default <R2> Either<L, R2> rFlatMap(@Nonnull Function<? super R, ? extends Either<L, R2>> rMapper) {
-        return flatMap(__ -> this, rMapper);
+        // todo fix contract
+        //noinspection unchecked
+        return flatMap(__ -> (Either<L, R2>) this, requireNonNull(rMapper));
     }
 
     /**
@@ -168,6 +175,8 @@ public interface Either<L, R> {
     @Nonnull
     default <L2, R2> Either<L2, R2> map(@Nonnull Function<? super L, ? extends L2> lMapper,
                                         @Nonnull Function<? super R, ? extends R2> rMapper) {
+        requireNonNull(lMapper);
+        requireNonNull(rMapper);
         return flatMap(l -> left(lMapper.apply(l)), r -> right(rMapper.apply(r)));
     }
 
@@ -199,7 +208,7 @@ public interface Either<L, R> {
      * @param lConsumer to accept left value
      */
     default void onLeft(@Nonnull Consumer<? super L> lConsumer) {
-        onBoth(lConsumer, Either::nop);
+        onBoth(requireNonNull(lConsumer), Either::nop);
     }
 
     /**
@@ -208,7 +217,7 @@ public interface Either<L, R> {
      * @param rConsumer to accept right value
      */
     default void onRight(@Nonnull Consumer<? super R> rConsumer) {
-        onBoth(Either::nop, rConsumer);
+        onBoth(Either::nop, requireNonNull(rConsumer));
     }
 
     /**

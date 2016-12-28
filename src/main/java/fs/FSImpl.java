@@ -3,14 +3,19 @@
  */
 package fs;
 
+import static fs.FSError.Type.FILE_IS_REGULAR;
+import static fs.FileType.DIRECTORY;
 import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 
+import check.CheckHelper;
 import data.ByteArray;
 import data.Either;
 import data.Unit;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.function.Supplier;
 
 final class FSConfig {
     private FSConfig() {
@@ -34,23 +39,36 @@ final class SimpleFSImpl implements FS {
             throw new IllegalStateException("Can't create file system with negative size");
         }
         this.size = size;
+        checkInvariants();
+    }
+
+    private void checkInvariants() {
+        assert root.size() <= size;
+    }
+
+    private <T> T checkedGet(Supplier<? extends T> payload) {
+        return CheckHelper.checkedGet(payload, this::checkInvariants);
     }
 
     @Nonnull
     @Override
     public Either<FSError, Unit> create(@Nonnull String path, @Nonnull FileType fileType) {
-        final List<String> splitPath = splitPath(path);
-        return findParentNode(splitPath).rFlatMap(parent -> parent.createUnder(splitPath.get(splitPath.size() - 1), fileType));
+        return checkedGet(
+                () -> {
+                    requireNonNull(fileType);
+                    final List<String> splitPath = splitPath(requireNonNull(path));
+                    return findParentNode(splitPath).rFlatMap(parent -> parent.createUnder(splitPath.get(splitPath.size() - 1), fileType));
+                });
     }
 
     @Nonnull
     private Either<FSError, FSNode> findParentNode(@Nonnull List<String> splitPath) {
-        return root.findUnder(splitPath.subList(0, splitPath.size() - 1));
+        return checkedGet(() -> root.findUnder(requireNonNull(splitPath).subList(0, splitPath.size() - 1)));
     }
 
     @Nonnull
     private static List<String> splitPath(@Nonnull String path) {
-        if (!path.startsWith("/")) {
+        if (!requireNonNull(path).startsWith("/")) {
             throw new IllegalArgumentException(String.format("Path %s is malformed (not starting from '/')", path));
         }
         return asList(path.replaceAll("/+", "/").replaceAll("^/", "").split("/"));
@@ -59,66 +77,155 @@ final class SimpleFSImpl implements FS {
     @Nonnull
     @Override
     public Either<FSError, FileInfo> info(@Nonnull String path) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return checkedGet(() -> root.findUnder(splitPath(requireNonNull(path))).rMap(FSNode::info));
     }
 
     @Nonnull
     @Override
     public Either<FSError, ByteArray> read(@Nonnull String path) {
-        return root.findUnder(splitPath(path)).rFlatMap(FSNode::content);
+        return checkedGet(() -> root.findUnder(splitPath(requireNonNull(path))).rFlatMap(FSNode::content));
     }
 
     @Nonnull
     @Override
     public Either<FSError, List<FileInfo>> ls(@Nonnull String path) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return checkedGet(() -> root.findUnder(splitPath(requireNonNull(path))).rFlatMap(FSNode::ls));
     }
 
     @Nonnull
     @Override
     public Either<FSError, Unit> copy(@Nonnull String sourcePath, @Nonnull String destinationPath) {
-        return root.findUnder(splitPath(sourcePath)).rFlatMap(
-                src -> src.size() <= free()
-                        ? doCopy(src, destinationPath)
-                        : Either.left(new FSError(FSError.Type.NO_FREE_SPACE, "There is no free space")));
+        return checkedGet(
+                () -> {
+                    final List<String> sourceSplitPath = splitPath(requireNonNull(sourcePath));
+                    final List<String> destinationSplitPath = splitPath(requireNonNull(destinationPath));
+                    return isDestinationSubtree(sourceSplitPath, destinationSplitPath)
+                            ? Either.left(
+                            new FSError(FSError.Type.DESTINATION_IS_SOURCE_SUBTREE, String.format("%s is subtree of %s", destinationPath, sourcePath)))
+                            : (
+                            root
+                                    .findUnder(sourceSplitPath)
+                                    .rFlatMap(
+                                            src -> src.size() <= free()
+                                                    ? doCopy(src, destinationPath, destinationSplitPath)
+                                                    : Either.left(new FSError(FSError.Type.NO_FREE_SPACE, "There is no free space"))));
+                });
     }
 
-    private Either<FSError, Unit> doCopy(FSNode src, String destinationPath) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    private static boolean isDestinationSubtree(List<String> sourceSplitPath, List<String> destinationSplitPath) {
+        return destinationSplitPath.size() > sourceSplitPath.size() &&
+                destinationSplitPath.subList(0, sourceSplitPath.size()).equals(sourceSplitPath);
+    }
+
+    private Either<FSError, Unit> doCopy(@Nonnull FSNode src, @Nonnull String destinationPath, List<String> destinationSplitPath) {
+        return checkedGet(
+                () -> {
+                    requireNonNull(src);
+                    return root
+                            .findUnder(requireNonNull(destinationSplitPath))
+                            .flatMap(
+                                    __ -> findParentNode(destinationSplitPath)
+                                            .rFlatMap(
+                                                    parent -> {
+                                                        final Either<FSError, Unit> result;
+                                                        if (parent.type() != DIRECTORY) {
+                                                            result = Either.left(new FSError(
+                                                                    FILE_IS_REGULAR, String.format("Shouldn't copy under regular file %s", parent.path())));
+                                                        } else {
+                                                            src.copyTo(destinationSplitPath.get(destinationSplitPath.size() - 1), parent);
+                                                            result = Either.right(Unit.unit());
+                                                        }
+                                                        return result;
+                                                    }),
+                                    dst -> src == dst
+                                            ? Either.right(Unit.unit())
+                                            : Either.left(new FSError(FSError.Type.FILE_ALREADY_EXISTS, String.format("File %s already exists", destinationPath))));
+                });
     }
 
     @Nonnull
     @Override
     public Either<FSError, Unit> write(@Nonnull String path, @Nonnull byte[] content) {
-        return root.findUnder(splitPath(path)).rFlatMap(
-                node -> content.length <= free() + node.size()
-                        ? node.write(content)
-                        : Either.left(new FSError(FSError.Type.NO_FREE_SPACE, "There is no free space")));
+        return checkedGet(
+                () -> {
+                    requireNonNull(content);
+                    return root
+                            .findUnder(splitPath(requireNonNull(path)))
+                            .rFlatMap(
+                                    node -> content.length <= free() + node.size()
+                                            ? node.write(content)
+                                            : Either.left(new FSError(FSError.Type.NO_FREE_SPACE, "There is no free space")));
+                });
     }
 
     @Nonnull
     @Override
     public Either<FSError, Unit> append(@Nonnull String path, @Nonnull byte[] content) {
-        return root.findUnder(splitPath(path)).rFlatMap(
-                node -> content.length <= free()
-                        ? node.append(content)
-                        : Either.left(new FSError(FSError.Type.NO_FREE_SPACE, "There is no free space")));
+        return checkedGet(
+                () -> {
+                    requireNonNull(path);
+                    requireNonNull(content);
+                    return root
+                            .findUnder(splitPath(path))
+                            .rFlatMap(
+                                    node -> content.length <= free()
+                                            ? node.append(content)
+                                            : Either.left(new FSError(FSError.Type.NO_FREE_SPACE, "There is no free space")));
+                });
     }
 
     @Nonnull
     @Override
     public Either<FSError, Unit> delete(@Nonnull String path) {
-        final List<String> splitPath = splitPath(path);
-        return findParentNode(splitPath).rFlatMap(parent -> parent.deleteUnder(splitPath.get(splitPath.size() - 1)));
+        return checkedGet(
+                () -> {
+                    final List<String> splitPath = splitPath(requireNonNull(path));
+                    return findParentNode(splitPath).rFlatMap(parent -> parent.deleteUnder(splitPath.get(splitPath.size() - 1)));
+                });
     }
 
     @Override
     public long size() {
-        return size;
+        return checkedGet(() -> size);
     }
 
     @Override
     public long used() {
-        return root.size();
+        return checkedGet(root::size);
+    }
+
+    @Nonnull
+    @Override
+    public Either<FSError, Unit> move(@Nonnull String sourcePath, @Nonnull String destinationPath) {
+        return checkedGet(() -> {
+            final List<String> sourceSplitPath = splitPath(requireNonNull(sourcePath));
+            final List<String> destinationSplitPath = splitPath(requireNonNull(destinationPath));
+            return isDestinationSubtree(sourceSplitPath, destinationSplitPath)
+                    ? Either.left(new FSError(FSError.Type.DESTINATION_IS_SOURCE_SUBTREE, String.format("%s is subtree of %s", destinationPath, sourcePath)))
+                    : root.findUnder(sourceSplitPath).rFlatMap((src) -> doMove(src, destinationPath, destinationSplitPath));
+        });
+    }
+
+    private Either<FSError, Unit> doMove(FSNode src, String destinationPath, List<String> destinationSplitPath) {
+        return checkedGet(
+                () -> root
+                        .findUnder(destinationSplitPath)
+                        .flatMap(
+                                __ -> findParentNode(destinationSplitPath)
+                                        .rFlatMap(
+                                                parent -> {
+                                                    final Either<FSError, Unit> result;
+                                                    if (parent.type() != DIRECTORY) {
+                                                        result = Either.left(new FSError(
+                                                                FILE_IS_REGULAR, String.format("Shouldn't move under regular file %s", parent.path())));
+                                                    } else {
+                                                        src.moveTo(destinationSplitPath.get(destinationSplitPath.size() - 1), parent);
+                                                        result = Either.right(Unit.unit());
+                                                    }
+                                                    return result;
+                                                }),
+                                dst -> src == dst
+                                        ? Either.right(Unit.unit())
+                                        : Either.left(new FSError(FSError.Type.FILE_ALREADY_EXISTS, String.format("File %s already exists", destinationPath)))));
     }
 }

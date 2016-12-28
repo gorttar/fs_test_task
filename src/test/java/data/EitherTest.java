@@ -1,5 +1,6 @@
 package data;
 
+import static helpers.TestHelper.addReprToFunc;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
@@ -13,28 +14,16 @@ import java.util.function.Supplier;
  * @author Andrey Antipov (gorttar@gmail.com) (2016-12-17)
  */
 public class EitherTest {
-    private final static Function<Integer, Integer> F = new Function<Integer, Integer>() {
-        @Override
-        public Integer apply(Integer x) {
-            return 2 * x;
-        }
+    private final static Function<Integer, String> RF = addReprToFunc(x -> Integer.toString(2 * x), "x -> Integer.toString(2 * x)");
 
-        @Override
-        public String toString() {
-            return "x -> 2 * x";
-        }
-    };
-    private final static Function<Integer, Integer> G = new Function<Integer, Integer>() {
-        @Override
-        public Integer apply(Integer x) {
-            return x + 3;
-        }
+    private final static Function<Integer, String> LF = addReprToFunc(x -> Integer.toString(x + 3), "x -> Integer.toString(x + 3)");
 
-        @Override
-        public String toString() {
-            return "x -> x + 3";
-        }
-    };
+    private final static Function<String, Integer> RG = addReprToFunc(s -> Integer.valueOf(s) + 3, "s -> Integer.valueOf(s) + 3");
+
+    private final static Function<String, Integer> LG = addReprToFunc(s -> 2 * Integer.valueOf(s), "s -> 2 * Integer.valueOf(s)");
+
+    static {
+    }
 
     private static Supplier<String> supplierFor(String supplied) {
         return new Supplier<String>() {
@@ -88,10 +77,10 @@ public class EitherTest {
     @DataProvider(name = "testLMap")
     Object[][] data4testLMap() {
         return new Object[][]{
-                {F, G, Either.right(1), Either.right(1)},
-                {F, G, Either.right(2), Either.right(2)},
-                {F, G, Either.left(1), Either.left(5)},
-                {F, G, Either.left(2), Either.left(7)},
+                {RF, RG, Either.right(1), Either.right(1)},
+                {RF, RG, Either.right(2), Either.right(2)},
+                {RF, RG, Either.left(1), Either.left(5)},
+                {RF, RG, Either.left(2), Either.left(7)},
         };
     }
 
@@ -142,10 +131,10 @@ public class EitherTest {
     @DataProvider(name = "testRMap")
     Object[][] data4testRMap() {
         return new Object[][]{
-                {F, G, Either.right(1), Either.right(5)},
-                {F, G, Either.right(2), Either.right(7)},
-                {F, G, Either.left(1), Either.left(1)},
-                {F, G, Either.left(2), Either.left(2)},
+                {RF, RG, Either.right(1), Either.right(5)},
+                {RF, RG, Either.right(2), Either.right(7)},
+                {RF, RG, Either.left(1), Either.left(1)},
+                {RF, RG, Either.left(2), Either.left(2)},
         };
     }
 
@@ -196,26 +185,28 @@ public class EitherTest {
     @DataProvider(name = "testMap")
     Object[][] data4testMap() {
         return new Object[][]{
-                {F, G, Either.right(1), Either.right(8)},
-                {F, G, Either.right(2), Either.right(10)},
-                {F, G, Either.left(1), Either.left(5)},
-                {F, G, Either.left(2), Either.left(7)},
-                {G, F, Either.right(1), Either.right(5)},
-                {G, F, Either.right(2), Either.right(7)},
-                {G, F, Either.left(1), Either.left(8)},
-                {G, F, Either.left(2), Either.left(10)},
+                {LF, LG, RF, RG, Either.right(1), Either.right(5)},
+                {LF, LG, RF, RG, Either.right(2), Either.right(7)},
+                {LF, LG, RF, RG, Either.left(1), Either.left(8)},
+                {LF, LG, RF, RG, Either.left(2), Either.left(10)},
+                {RF, RG, LF, LG, Either.right(1), Either.right(8)},
+                {RF, RG, LF, LG, Either.right(2), Either.right(10)},
+                {RF, RG, LF, LG, Either.left(1), Either.left(5)},
+                {RF, RG, LF, LG, Either.left(2), Either.left(7)},
         };
     }
 
     @Test(dataProvider = "testMap")
-    public void testMap(Function<Integer, Integer> f,
-                        Function<Integer, Integer> g,
+    public void testMap(Function<Integer, String> lf,
+                        Function<String, Integer> lg,
+                        Function<Integer, String> rf,
+                        Function<String, Integer> rg,
                         Either<Integer, Integer> arg,
                         Either<Integer, Integer> expected) throws Exception {
-        final Either<Integer, Integer> actual = arg.map(f, g).map(g, f);
+        final Either<Integer, Integer> actual = arg.map(lf, rf).map(lg, rg);
         assertEquals(actual, expected);
         assertEquals(arg.map(x -> x, x -> x), arg); // first functor law
-        assertEquals(actual, arg.map(f.andThen(g), g.andThen(f))); // second functor law
+        assertEquals(actual, arg.map(lf.andThen(lg), rf.andThen(rg))); // second functor law
     }
 
     @DataProvider(name = "testFlatMap")
@@ -296,16 +287,16 @@ public class EitherTest {
     @DataProvider(name = "testBoth")
     Object[][] data4testBoth() {
         return new Object[][]{
-                {Either.right(1), F, G, 4},
-                {Either.left(1), F, G, 2},
+                {Either.right(1), LF, RF, "2"},
+                {Either.left(1), LF, RF, "4"},
         };
     }
 
     @Test(dataProvider = "testBoth")
     public void testBoth(Either<Integer, Integer> either,
-                         Function<Integer, Integer> lMapper,
-                         Function<Integer, Integer> rMapper,
-                         Integer expected) throws Exception {
+                         Function<Integer, String> lMapper,
+                         Function<Integer, String> rMapper,
+                         String expected) throws Exception {
         assertEquals(either.both(lMapper, rMapper), expected);
     }
 

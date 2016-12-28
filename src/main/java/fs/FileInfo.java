@@ -3,6 +3,8 @@
  */
 package fs;
 
+import static java.util.Objects.requireNonNull;
+
 import javax.annotation.Nonnull;
 import java.util.Objects;
 
@@ -10,17 +12,21 @@ import java.util.Objects;
  * @author Andrey Antipov (gorttar@gmail.com) (2016-12-24)
  */
 public class FileInfo {
+    @SuppressWarnings("WeakerAccess")
     @Nonnull
     public final String fullName;
 
+    @SuppressWarnings("WeakerAccess")
     @Nonnull
     public final FileType type;
 
+    @SuppressWarnings("WeakerAccess")
     public final long size;
 
+    @SuppressWarnings("WeakerAccess")
     public FileInfo(@Nonnull String fullName, @Nonnull FileType type, long size) {
-        this.fullName = fullName;
-        this.type = type;
+        this.fullName = requireNonNull(fullName);
+        this.type = requireNonNull(type);
         this.size = size;
     }
 

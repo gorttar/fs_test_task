@@ -3,6 +3,8 @@
  */
 package data;
 
+import static java.util.Objects.requireNonNull;
+
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 
@@ -27,7 +29,7 @@ public class ByteArray {
      * @param content to be wrapped
      */
     public ByteArray(@Nonnull byte[] content) {
-        this.content = content.clone();
+        this.content = requireNonNull(content).clone();
     }
 
     /**
@@ -40,8 +42,12 @@ public class ByteArray {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ByteArray)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ByteArray)) {
+            return false;
+        }
         ByteArray byteArray = (ByteArray) o;
         return Arrays.equals(content, byteArray.content);
     }

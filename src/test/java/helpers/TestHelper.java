@@ -8,6 +8,7 @@ import static org.testng.Assert.fail;
 
 import javax.annotation.Nonnull;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * @author Andrey Antipov (gorttar@gmail.com) (2016-12-25)
@@ -38,7 +39,7 @@ public final class TestHelper {
      *
      * @param source to decorate
      * @param repr   what decorated consumer's toString should return
-     * @param <T>    consumer's type argument
+     * @param <T>    consumer's argument type
      * @return decorated consumer
      */
     public static <T> Consumer<T> addReprToCons(@Nonnull Consumer<? super T> source,
@@ -59,12 +60,38 @@ public final class TestHelper {
     }
 
     /**
+     * {@link Function} decorator which adds provided repr to source function
+     *
+     * @param source to decorate
+     * @param repr   what decorated function's toString should return
+     * @param <T>    function's argument type
+     * @param <R>    function's result type
+     * @return decorated function
+     */
+    public static <T, R> Function<T, R> addReprToFunc(@Nonnull Function<? super T, ? extends R> source,
+                                                      @Nonnull String repr) {
+        requireNonNull(source);
+        requireNonNull(repr);
+        return new Function<T, R>() {
+            @Override
+            public R apply(T t) {
+                return source.apply(t);
+            }
+
+            @Override
+            public String toString() {
+                return repr;
+            }
+        };
+    }
+
+    /**
      * provides consumer which throws {@link AssertionError} with given message on invocation
      *
      * @param message error description
      * @return consumer described above
      */
     public static <T> Consumer<T> provideFail(String message) {
-        return addReprToCons(arg -> fail(message + "\targ:" + arg), "arg -> fail(" + message + " + \"\\targ:\" + arg)");
+        return addReprToCons(arg -> fail(message + "\t arg:" + arg), "arg -> fail(" + message + " + \"\\t arg:\" + arg)");
     }
 }
