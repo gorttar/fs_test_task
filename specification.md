@@ -17,7 +17,7 @@ There should be unit tests for implementation
 There is no practical reasoning to implement such emulation since there are many
 existing RAM file system tools and it's better use one of them than reinvent the
 wheel so I've added some goals to make task somewhat reasonable:
-* Use own implementation of **data.Either** monad instead of checked exceptions to return
+* Use own implementation of **data.either.Either** monad instead of checked exceptions to return
 possible special values in order to achieve better practical understanding of the
 following aspects:
    * which one is more comfortable to use by me
@@ -27,7 +27,7 @@ following aspects:
 1. There are only rare practical cases of byte stream access to files (really big files)
 so all access operations should consume/return **byte[]** or **data.ByteArray**
 1. Specification should be extended in order to support ls operation on directories
-1. All special values should be returned using **data.Either** monad instead of checked
+1. All special values should be returned using **data.either.Either** monad instead of checked
 exceptions
 1. copy/move/delete operations on directories should affect it's subtree as well
 

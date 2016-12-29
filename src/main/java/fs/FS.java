@@ -7,14 +7,15 @@ import static fs.FSError.Type.FS_CREATION_FAILED;
 import static java.util.Objects.requireNonNull;
 
 import data.ByteArray;
-import data.Either;
+import data.either.Either;
 import data.Unit;
+import fs.impl.FSConfig;
 
 import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
- * ADT representing file system API
+ * file system API interface
  * all file systems should implement it
  *
  * @author Andrey Antipov (gorttar@gmail.com) (2016-12-20)

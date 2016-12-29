@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2016 Andrey Antipov. All Rights Reserved.
  */
-package data;
+package data.either;
 
 import static java.util.Objects.requireNonNull;
+
+import data.either.impl.EitherConfig;
 
 import javax.annotation.Nonnull;
 import java.util.function.Consumer;
@@ -130,7 +132,7 @@ public interface Either<L, R> {
      */
     @Nonnull
     default <L2> Either<L2, R> lFlatMap(@Nonnull Function<? super L, ? extends Either<L2, R>> lMapper) {
-        // todo fix contract
+        // it's safe to cast this in rMapper because right values shouldn't contain any left related information
         //noinspection unchecked
         return flatMap(requireNonNull(lMapper), __ -> (Either<L2, R>) this);
     }
@@ -158,7 +160,7 @@ public interface Either<L, R> {
      */
     @Nonnull
     default <R2> Either<L, R2> rFlatMap(@Nonnull Function<? super R, ? extends Either<L, R2>> rMapper) {
-        // todo fix contract
+        // it's safe to cast this in lMapper because left values shouldn't contain any right related information
         //noinspection unchecked
         return flatMap(__ -> (Either<L, R2>) this, requireNonNull(rMapper));
     }
@@ -230,7 +232,7 @@ public interface Either<L, R> {
      */
     @Nonnull
     static <L, R> Either<L, R> right(R r) {
-        return new Right<>(r);
+        return EitherConfig.right(r);
     }
 
     /**
@@ -243,11 +245,11 @@ public interface Either<L, R> {
      */
     @Nonnull
     static <L, R> Either<L, R> left(L l) {
-        return new Left<>(l);
+        return EitherConfig.left(l);
     }
 
     final class UnwrapException extends Exception {
-        UnwrapException(String message) {
+        public UnwrapException(String message) {
             super(message);
         }
     }

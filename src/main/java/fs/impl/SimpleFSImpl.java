@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Andrey Antipov. All Rights Reserved.
  */
-package fs;
+package fs.impl;
 
 import static fs.FSError.Type.FILE_IS_REGULAR;
 import static fs.FileType.DIRECTORY;
@@ -10,21 +10,16 @@ import static java.util.Objects.requireNonNull;
 
 import check.CheckHelper;
 import data.ByteArray;
-import data.Either;
+import data.either.Either;
 import data.Unit;
+import fs.FS;
+import fs.FSError;
+import fs.FileInfo;
+import fs.FileType;
 
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.function.Supplier;
-
-final class FSConfig {
-    private FSConfig() {
-    }
-
-    static FS init(long size) {
-        return new SimpleFSImpl(size);
-    }
-}
 
 /**
  * @author Andrey Antipov (gorttar@gmail.com) (2016-12-26)

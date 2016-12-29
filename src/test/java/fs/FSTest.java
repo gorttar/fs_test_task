@@ -37,7 +37,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import data.ByteArray;
-import data.Either;
+import data.either.Either;
 import data.Unit;
 import helpers.TestHelper;
 import org.testng.annotations.DataProvider;

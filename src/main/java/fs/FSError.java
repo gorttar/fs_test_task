@@ -28,6 +28,9 @@ public class FSError extends Exception {
         this.message = message;
     }
 
+    /**
+     * enumeration of available file system errors
+     */
     public enum Type {
         NO_FREE_SPACE, FILE_ALREADY_EXISTS, PATH_NOT_FOUND, FILE_IS_DIRECTORY, FILE_IS_REGULAR, DESTINATION_IS_SOURCE_SUBTREE, FS_CREATION_FAILED
     }

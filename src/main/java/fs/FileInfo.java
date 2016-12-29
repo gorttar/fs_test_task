@@ -9,6 +9,9 @@ import javax.annotation.Nonnull;
 import java.util.Objects;
 
 /**
+ * immutable DTO to represent file information (name, type, size etc). Contains no getters because it's fields are immutable, their types
+ * are also immutable, so there is no need to hide them behind getters
+ *
  * @author Andrey Antipov (gorttar@gmail.com) (2016-12-24)
  */
 public class FileInfo {
@@ -32,8 +35,12 @@ public class FileInfo {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof FileInfo)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof FileInfo)) {
+            return false;
+        }
         FileInfo fileInfo = (FileInfo) o;
         return size == fileInfo.size &&
                 Objects.equals(fullName, fileInfo.fullName) &&
