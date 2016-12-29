@@ -22,6 +22,11 @@ possible special values in order to achieve better practical understanding of th
 following aspects:
    * which one is more comfortable to use by me
    * which one is more readable by task reviewers
+* Achieve better practical understanding of defensive programming practices learned during online course
+**MITx: 6.005.1x Software Construction in Java**:
+   * representation invariants checking with **assert** Java keyword
+   * separating interfaces from implementation as much as possible in Java
+   * immutability and **null** hostility by default
 
 ## Assumptions and extensions
 1. There are only rare practical cases of byte stream access to files (really big files)
@@ -39,7 +44,23 @@ See Javadocs for **fs.FS**
 1. ~~Complete specification revision.~~
 1. ~~Declare specification as **fs.FS** interface.~~
 1. ~~Write single thread version tests.~~
-1. Implement single thread version.
-1. Write user's guide
-1. Write concurrent version tests.
-1. Implement concurrent version.
+1. ~~Implement single thread version.~~
+1. ~~Write installation guide~~
+1. Optionally write concurrent version tests.
+1. Optionally implement concurrent version.
+
+# Post implementation goals review
+1. Using **data.either.Either** is better than checked exceptions from perspective
+of compatibility with J8 features: checked exceptions are painful to use with functional
+features
+1. Representation invariants checking is good practice because of the following reasons:
+   * it encourages developer to achieve better understanding of task's subject
+   domain in order to think about domain's laws (invariants)
+   * it guards developer from violating subject domain's laws by enforcing invariants
+   checking during test runs
+   * **assert** based invariants checking can easily be turned off on production
+1. Separating interfaces from implementation is good technique but it's not always
+possible in Java to completely hide implementation from interface client
+1. It's easy to enforce **null** hostility using **java.util.Objects.requireNonNull(T)**
+1. Unfortunately **null** hostility and immutability can't be enforced at compile time in
+Java
